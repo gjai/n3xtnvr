@@ -8,7 +8,7 @@ Consultation effectuée **avant** de figer cette documentation :
 
 | Source | Ce qui en ressort pour ce dépôt |
 |--------|----------------------------------|
-| **open.jftech.com** | Page « plateforme ouverte » (libellé générique côté constructeur). Pas de détail API exploitable dans le contenu récupéré automatiquement ; le projet ne repose pas sur un SDK propriétaire binaire. |
+| **open.jftech.com / docs.jftech.com** | Plateforme ouverte + **[documentation développeur](https://docs.jftech.com/docs?menusId=ab0ed73834f54368be3e375075e27fb2&siderId=8b151b9095974a91823ab663b0c4122e&lang=en)** (API / intégration — utile pour croiser ports, modes et évolutions matérielles **NBD** / série associée). Ce dépôt reste sans SDK binaire propriétaire Intel ; uniquement protocole DVRIP réimplémenté en Swift. |
 | **open.xmeye.net** (chemins `/`, `/en/index.php`) | **404** ou **timeout** au moment de la collecte — les fiches **NetSDK / PlaySDK** n’ont pas pu être indexées ici. À consulter manuellement pour alignement futur (fonctions natives constructeur). |
 | **Implémentations communautaires** | Alignement sur la structure **DVRIP** documentée par reverse engineering : en-tête **20 octets** (`0xFF`, session, séquence, **msgId**, longueur), corps **JSON** terminé par **`\\n\\0`**. Références : **OpenIPC/python-dvr** (`dvrip.py`), **alexshpilkin/dvrip**, **sofia-netsurv/python-netsurv**. Port TCP par défaut **34567**, UDP **34568** dans certaines libs ; découverte LAN souvent **UDP 34569** (cf. **go2rtc**). |
 
@@ -27,9 +27,9 @@ Consultation effectuée **avant** de figer cette documentation :
 |--------|------|
 | **Models** | `NVRConnectionSettings` (hôte, Cloud ID, ports, gabarit RTSP), `AppSession` (état UI, session DVRIP, titres de voies). |
 | **Services** | `DVRIPClient` (login **1000**, keep-alive **1006**, PTZ **1400**, titres **1048**), `NVRDiscoveryService` (UDP **34569**), `CloudIDResolver` (DNS). |
-| **Views** | `LoginView`, `NVRDiscoveryView`, `MainDashboardView` (`NavigationSplitView`), `CameraGridView`, `RTSPPlayerCell` / `MacAVPlayerView`. |
+| **Views** | `LoginView`, `NVRDiscoveryView`, `MainDashboardView` (`NavigationSplitView`), `CameraGridView`, `RTSPPlayerCell` / `VLCStreamPlayerView` (live), `MacAVPlayerView` (optionnel / legacy). |
 
-Flux : **UI** → **AppSession** → **DVRIPClient** (file dédiée + async) ; **RTSP** construit depuis les paramètres et passé au lecteur **AVPlayer**.
+Flux : **UI** → **AppSession** → **DVRIPClient** (file dédiée + async) ; **RTSP** construit depuis les paramètres et passé au lecteur **VLCKit** (`VLCStreamPlayerView`).
 
 ## Prérequis
 
@@ -85,5 +85,6 @@ Le **P2P propriétaire** XMeye complet n’est pas intégré. L’app tente une 
 ## Références
 
 - [Plateforme ouverte JFTech](https://open.jftech.com/)
+- [Documentation développeur JFTech (docs)](https://docs.jftech.com/docs?menusId=ab0ed73834f54368be3e375075e27fb2&siderId=8b151b9095974a91823ab663b0c4122e&lang=en) — portail **开发者文档** (sections selon `menusId` / `siderId` dans l’URL)
 - [Portail développeur XMeye](https://open.xmeye.net/) (à parcourir manuellement si les pages SDK sont disponibles)
 - [OpenIPC/python-dvr](https://github.com/OpenIPC/python-dvr) — structure DVRIP de référence
