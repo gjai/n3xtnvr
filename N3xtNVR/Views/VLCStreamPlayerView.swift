@@ -30,7 +30,6 @@ struct VLCStreamPlayerView: NSViewRepresentable {
     final class Coordinator: NSObject, VLCMediaPlayerDelegate {
         var phase: Binding<NVRStreamPhase>
         private let player = VLCMediaPlayer()
-        private weak var hostView: NSView?
         private var currentURL: URL?
         private var timeoutWorkItem: DispatchWorkItem?
 
@@ -39,7 +38,6 @@ struct VLCStreamPlayerView: NSViewRepresentable {
         }
 
         func attach(to view: NSView) {
-            hostView = view
             player.drawable = view
             player.delegate = self
         }
@@ -78,9 +76,16 @@ struct VLCStreamPlayerView: NSViewRepresentable {
 
         func stop() {
             cancelTimeout()
+            player.delegate = nil
             player.stop()
+            player.media = nil
             player.drawable = nil
             currentURL = nil
+        }
+
+        deinit {
+            player.delegate = nil
+            player.stop()
         }
 
         private func cancelTimeout() {
@@ -88,12 +93,15 @@ struct VLCStreamPlayerView: NSViewRepresentable {
             timeoutWorkItem = nil
         }
 
-        @objc func mediaPlayerStateChanged(_ aNotification: Notification) {
-            guard let p = aNotification.object as? VLCMediaPlayer else { return }
+        /// Signature exacte `VLCMediaPlayerDelegate` : **VLCMediaPlayerState**, pas `Notification`
+        /// (sinon VLC passe un entier d’état ; Swift le traitait comme objet → crash `objc_retain(0x2)`).
+        func mediaPlayerStateChanged(_ newState: VLCMediaPlayerState) {
             DispatchQueue.main.async { [weak self] in
                 guard let self else { return }
-                switch p.state {
-                case .playing, .buffering:
+                switch newState {
+                case .opening, .buffering:
+                    self.phase.wrappedValue = .connecting
+                case .playing:
                     self.phase.wrappedValue = .playing
                     self.cancelTimeout()
                 case .error:
