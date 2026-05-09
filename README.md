@@ -18,7 +18,7 @@ Consultation effectuée **avant** de figer cette documentation :
 - **Plateforme** : **macOS 15+**, **arm64 uniquement** (pas de dépendance Intel / Rosetta pour l’app).
 - **Connexion** : IP locale, **hostname / DDNS**, ou **Cloud ID** (série XMeye) avec résolution DNS *best effort* ; port DVRIP **34567** ; utilisateur / mot de passe.
 - **Dashboard** : grille **2×2** ou **4×4** (SwiftUI), liste des caméras avec titres DVRIP quand le firmware les expose (**ChannelTitle** / msg **1048**).
-- **Vidéo** : lecture RTSP via **AVKit** (décodage **VideoToolbox** côté système). **FFmpeg** / **ffplay** restent optionnels pour le diagnostic hors application.
+- **Vidéo** : lecture RTSP via **VLCKit** (paquet [VLCKitSPM](https://github.com/rursache/VLCKitSPM)), transport **RTSP/TCP** (`:rtsp-tcp`) — bien plus fiable qu’**AVPlayer** sur macOS pour les NVR Xiongmai. **FFmpeg** / **ffplay** restent utiles pour le diagnostic hors application.
 - **PTZ** : commandes **OPPTZControl** (**1400**) sur la session TCP existante (**Network.framework** / `NWConnection`).
 
 ## Architecture (plan)
@@ -52,6 +52,10 @@ xcodebuild -project N3xtNVR.xcodeproj -scheme N3xtNVR -configuration Debug build
 Le fichier `project.pbxproj` peut être régénéré avec `python3 scripts/gen_pbx.py` après ajout de fichiers Swift.
 
 **ARCHS = arm64** — pas de binaire Intel pour l’application.
+
+## Dépendance Swift Package (vidéo)
+
+Le projet référence **VLCKitSPM** (branche `master`) pour le décodage RTSP en direct. Xcode résout le paquet au premier build (`File > Packages > Resolve Package Versions` si besoin).
 
 ## Dépendances optionnelles (FFmpeg)
 

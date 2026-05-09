@@ -18,6 +18,8 @@
 		914625133AD58E89F6F85437 /* CameraGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 377D90FEAD03DD1FD702A169 /* CameraGridView.swift */; };
 		F23267AF5706D158E95B587D /* RTSPPlayerCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08FFE1946A92C41AFFFBA236 /* RTSPPlayerCell.swift */; };
 		7E8C00EDF1C68DBFDA8D9241 /* MacAVPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE56026A640B1636D61C8D81 /* MacAVPlayerView.swift */; };
+		A44556677889900ABBCCD102 /* VLCStreamPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3344556677889900AABBC101 /* VLCStreamPlayerView.swift */; };
+		E22F30415263748596A72B39 /* VLCKitSPM in Frameworks */ = {isa = PBXBuildFile; productRef = D11E2F30415263748596A728 /* VLCKitSPM */; };
 		835A0F8AEACAF9CCABB99BAB /* NVRDiscoveryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BD20151C39AB7276C5673B4 /* NVRDiscoveryView.swift */; };
 		6C9858810E4943591EAC78C3 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 961FDBBE9E2962FC16675C1A /* Assets.xcassets */; };
 /* End PBXBuildFile section */
@@ -35,6 +37,7 @@
 		377D90FEAD03DD1FD702A169 /* CameraGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraGridView.swift; sourceTree = "<group>"; };
 		08FFE1946A92C41AFFFBA236 /* RTSPPlayerCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RTSPPlayerCell.swift; sourceTree = "<group>"; };
 		DE56026A640B1636D61C8D81 /* MacAVPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacAVPlayerView.swift; sourceTree = "<group>"; };
+		F3344556677889900AABBC101 /* VLCStreamPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VLCStreamPlayerView.swift; sourceTree = "<group>"; };
 		6BD20151C39AB7276C5673B4 /* NVRDiscoveryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NVRDiscoveryView.swift; sourceTree = "<group>"; };
 		961FDBBE9E2962FC16675C1A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		EA87EA48207AAD59DBB0ACE7 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -45,6 +48,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E22F30415263748596A72B39 /* VLCKitSPM in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -107,6 +111,7 @@
 				377D90FEAD03DD1FD702A169 /* CameraGridView.swift */,
 				08FFE1946A92C41AFFFBA236 /* RTSPPlayerCell.swift */,
 				DE56026A640B1636D61C8D81 /* MacAVPlayerView.swift */,
+				F3344556677889900AABBC101 /* VLCStreamPlayerView.swift */,
 				6BD20151C39AB7276C5673B4 /* NVRDiscoveryView.swift */,
 			);
 			path = Views;
@@ -128,6 +133,9 @@
 			dependencies = (
 			);
 			name = N3xtNVR;
+			packageProductDependencies = (
+				D11E2F30415263748596A728 /* VLCKitSPM */,
+			);
 			productName = N3xtNVR;
 			productReference = B5E02452FA4BDB255F9D094B /* N3xtNVR.app */;
 			productType = "com.apple.product-type.application";
@@ -155,6 +163,9 @@
 				en,
 				Base,
 				fr,
+			);
+			packageReferences = (
+				C00D1E2F3A4B5C6D7E8F90123 /* XCRemoteSwiftPackageReference "VLCKitSPM" */,
 			);
 			mainGroup = 0A62CE730BD0E61A54EA341B;
 			productRefGroup = F004957DF012A7F497FD03CE /* Products */;
@@ -193,6 +204,7 @@
 				914625133AD58E89F6F85437 /* CameraGridView.swift in Sources */,
 				F23267AF5706D158E95B587D /* RTSPPlayerCell.swift in Sources */,
 				7E8C00EDF1C68DBFDA8D9241 /* MacAVPlayerView.swift in Sources */,
+				A44556677889900ABBCCD102 /* VLCStreamPlayerView.swift in Sources */,
 				835A0F8AEACAF9CCABB99BAB /* NVRDiscoveryView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -319,6 +331,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		C00D1E2F3A4B5C6D7E8F90123 /* XCRemoteSwiftPackageReference "VLCKitSPM" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/rursache/VLCKitSPM.git";
+			requirement = {
+				kind = branch;
+				branch = master;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		D11E2F30415263748596A728 /* VLCKitSPM */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C00D1E2F3A4B5C6D7E8F90123 /* XCRemoteSwiftPackageReference "VLCKitSPM" */;
+			productName = VLCKitSPM;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
-rootObject = 45A90771F861A099C13A8CF1 /* Project object */;
+	rootObject = 45A90771F861A099C13A8CF1 /* Project object */;
 }

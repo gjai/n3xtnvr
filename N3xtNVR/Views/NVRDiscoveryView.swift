@@ -16,7 +16,7 @@ struct NVRDiscoveryView: View {
                     HStack {
                         ProgressView()
                             .controlSize(.small)
-                        Text("Recherche sur le réseau local (UDP 34569, ~4 s)…")
+                        Text("Recherche sur le réseau local (UDP 34569, ~5,5 s)…")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }

@@ -46,7 +46,7 @@ enum NVRDiscoveryService {
     private static let multicastGroup = "239.255.255.250"
 
     /// Lance une recherche sur le réseau local (quelques secondes).
-    static func discover(listenDuration: TimeInterval = 4.2) async throws -> [DiscoveredNVR] {
+    static func discover(listenDuration: TimeInterval = 5.5) async throws -> [DiscoveredNVR] {
         try await withCheckedThrowingContinuation { continuation in
             DispatchQueue.global(qos: .userInitiated).async {
                 do {
@@ -84,7 +84,8 @@ enum NVRDiscoveryService {
         // Réception des annonces multicast (go2rtc écoute 239.255.255.250:34569).
         var mreq = ip_mreq()
         mreq.imr_multiaddr.s_addr = inet_addr(multicastGroup)
-        mreq.imr_interface.s_addr = inet_addr("0.0.0.0")
+        // Interface réelle : sur macOS, INADDR_ANY peut empêcher la réception du groupe pour certaines configs.
+        mreq.imr_interface.s_addr = inet_addr(primaryIPv4ForMulticast())
         _ = withUnsafePointer(to: &mreq) { p -> Int32 in
             p.withMemoryRebound(to: Int8.self, capacity: MemoryLayout<ip_mreq>.size) { ptr in
                 setsockopt(sock, IPPROTO_IP, IP_ADD_MEMBERSHIP, ptr, socklen_t(MemoryLayout<ip_mreq>.size))
@@ -170,21 +171,33 @@ enum NVRDiscoveryService {
     }
 
     private static func parseDiscoveryPacket(_ data: Data, packetSourceIPv4: String) -> DiscoveredNVR? {
-        guard data.count > 21 else { return nil }
+        var trimmed = data
+        if trimmed.count >= 3, trimmed[0] == 0xEF, trimmed[1] == 0xBB, trimmed[2] == 0xBF {
+            trimmed = trimmed.subdata(in: 3 ..< trimmed.count)
+        }
+
+        // Réponses JSON sans les 20 premiers octets DVRIP (certains firmwares).
+        if let first = trimmed.first, first == UInt8(ascii: "{") || first == UInt8(ascii: "[") {
+            if let d = decodeNetCommon(from: trimmed, packetSourceIPv4: packetSourceIPv4) {
+                return d
+            }
+        }
+
+        guard trimmed.count > 20 else { return nil }
 
         // Réponses observées : JSON après 20 octets ; dernier octet \0 ou \n (go2rtc : n-1).
         var candidates: [Data] = []
-        let trimmedEnd = data.last == 0 ? data.count - 1 : data.count
+        let trimmedEnd = trimmed.last == 0 ? trimmed.count - 1 : trimmed.count
         if trimmedEnd > 20 {
-            candidates.append(data.subdata(in: 20 ..< trimmedEnd))
+            candidates.append(trimmed.subdata(in: 20 ..< trimmedEnd))
         }
-        if data.count > 21 {
-            let slice = data.subdata(in: 20 ..< (data.count - 1))
+        if trimmed.count > 21 {
+            let slice = trimmed.subdata(in: 20 ..< (trimmed.count - 1))
             if !candidates.contains(where: { $0 == slice }) {
                 candidates.append(slice)
             }
         }
-        var payload = data.subdata(in: 20 ..< data.count)
+        var payload = trimmed.subdata(in: 20 ..< trimmed.count)
         while let last = payload.last, last == 0 || last == 10 || last == 13 {
             payload = payload.dropLast()
         }
@@ -252,7 +265,7 @@ enum NVRDiscoveryService {
         let tcpPort = net.TCPPort.flatMap { $0 > 0 ? $0 : nil } ?? 34_567
         let name = (net.HostName?.isEmpty == false ? net.HostName! : "NVR")
 
-        let ipFromJson = net.HostIP.flatMap { decodeHexHostIP($0) }
+        let ipFromJson = decodeHostIPField(net.HostIP)
         let fallbackIP: String? = packetSourceIPv4.isEmpty ? nil : packetSourceIPv4
         guard let ipv4 = ipFromJson ?? fallbackIP else { return nil }
 
@@ -308,6 +321,21 @@ enum NVRDiscoveryService {
         return out
     }
 
+    /// HostIP JSON : quad décimal, ou chaîne hex type `0x0101A8C0` (go2rtc).
+    private static func decodeHostIPField(_ raw: String?) -> String? {
+        guard let raw = raw?.trimmingCharacters(in: .whitespacesAndNewlines), !raw.isEmpty else {
+            return nil
+        }
+        if raw.contains(".") {
+            let parts = raw.split(separator: ".")
+            if parts.count == 4,
+               parts.allSatisfy({ p in UInt8(String(p)) != nil }) {
+                return raw
+            }
+        }
+        return decodeHexHostIP(raw)
+    }
+
     /// Chaîne `0xXXXXXXXX` ou hex 8 caractères → IPv4 (ordre d’octets go2rtc / little-endian sur le fil).
     private static func decodeHexHostIP(_ hex: String) -> String? {
         var s = hex
@@ -324,6 +352,34 @@ enum NVRDiscoveryService {
         }
         guard bytes.count == 4 else { return nil }
         return "\(Int(bytes[3])).\(Int(bytes[2])).\(Int(bytes[1])).\(Int(bytes[0]))"
+    }
+
+    /// Première IPv4 LAN pour `IP_ADD_MEMBERSHIP` (évite parfois une jointure inefficace avec `0.0.0.0`).
+    private static func primaryIPv4ForMulticast() -> String {
+        var list: UnsafeMutablePointer<ifaddrs>?
+        guard getifaddrs(&list) == 0, let first = list else { return "0.0.0.0" }
+        defer { freeifaddrs(list) }
+
+        var ptr: UnsafeMutablePointer<ifaddrs>? = first
+        while let p = ptr {
+            defer { ptr = p.pointee.ifa_next }
+
+            if let name = p.pointee.ifa_name {
+                let ifName = String(cString: name)
+                if ifName.hasPrefix("lo") { continue }
+            }
+
+            guard let addrPtr = p.pointee.ifa_addr,
+                  addrPtr.pointee.sa_family == UInt8(AF_INET)
+            else { continue }
+
+            let sin = addrPtr.withMemoryRebound(to: sockaddr_in.self, capacity: 1) { $0.pointee }
+            let copy = sin.sin_addr
+            let s = String(cString: inet_ntoa(copy))
+            if s.hasPrefix("127.") || sin.sin_addr.s_addr == 0 { continue }
+            return s
+        }
+        return "0.0.0.0"
     }
 }
 

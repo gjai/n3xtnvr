@@ -10,7 +10,7 @@ struct RTSPPlayerCell: View {
     var body: some View {
         ZStack {
             if let url {
-                MacAVPlayerView(url: url, phase: $phase)
+                VLCStreamPlayerView(url: url, phase: $phase)
                     .clipShape(RoundedRectangle(cornerRadius: 10))
             } else {
                 Rectangle()
